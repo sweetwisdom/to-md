@@ -2,6 +2,14 @@
 
 > 告别复制粘贴，一行命令把网页变成干净的 Markdown。
 
+|      |      |
+| ---- | ---- |
+| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" />![image-20260520183033442](./.imgs/image-20260520183033442.png) | 
+<img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" />     |
+
+
+
+
 [English](./README_EN.md) | 中文
 
 ---
@@ -64,6 +72,7 @@ to-md <url> [options]
 | `-i, --include <selector>` | 自定义内容选择器 | 自动匹配 |
 | `-t, --title <selector>` | 自定义标题选择器 | 自动匹配 |
 | `--no-rule` | 跳过规则匹配，直接用 Readability | - |
+| `--headless` | 无头模式运行（不显示浏览器窗口） | 关闭 |
 | `--wait <ms>` | 额外等待时间（用于动态加载） | `0` |
 | `--timeout <ms>` | 页面加载超时 | `30000` |
 | `--profile <dir>` | Chrome 配置目录（保留登录态） | 无 |

@@ -6,6 +6,11 @@
 
 ---
 
+|                                                              |      |
+| ------------------------------------------------------------ | ---- |
+| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" />![image-20260520183033442](./.imgs/image-20260520183033442.png) |      |
+| <img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" /> |      |
+
 ## The Problem
 
 Ever run into these issues?
@@ -64,6 +69,7 @@ to-md <url> [options]
 | `-i, --include <selector>` | Custom content selector | auto-detect |
 | `-t, --title <selector>` | Custom title selector | auto-detect |
 | `--no-rule` | Skip rule matching, use Readability directly | - |
+| `--headless` | Run browser in headless mode (no visible window) | off |
 | `--wait <ms>` | Extra wait time for dynamic content | `0` |
 | `--timeout <ms>` | Page load timeout | `30000` |
 | `--profile <dir>` | Chrome profile directory (keeps login sessions) | none |

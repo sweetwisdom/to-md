@@ -54,6 +54,7 @@ program
   .option('--no-rule', 'Skip rule matching')
   .option('--timeout <ms>', 'Page load timeout in ms', '30000')
   .option('--wait <ms>', 'Extra wait time for dynamic content in ms (0 = auto)', '0')
+  .option('--headless', 'Run browser in headless mode')
   .option('--profile <dir>', 'Chrome profile directory (keeps login sessions)')
   .action(async (url, options) => {
     let browser, context;
@@ -77,8 +78,11 @@ program
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
       };
 
+      const headless = !!options.headless;
+
       if (profileDir) {
         // Use persistent context with existing Chrome profile (keeps login sessions)
+        // --profile always forces non-headless (persistent context requires visible window)
         context = await chromium.launchPersistentContext(profileDir, {
           headless: false,
           channel: 'chrome',
@@ -98,7 +102,7 @@ program
         page = context.pages()[0] || await context.newPage();
       } else {
         browser = await chromium.launch({
-          headless: false,
+          headless,
           channel: 'chrome',
           ...stealthOptions,
         });

@@ -1,0 +1,129 @@
+{
+  "skill_name": "to-md",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我想把这个掘金的文章转成 markdown 保存到本地：https://juejin.cn/post/7605416964510810139",
+      "expected_output": "用户成功抓取文章并保存为 markdown 文件，包含完整标题、正文和图片",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Provides the correct to-md CLI command",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Shows output file option",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Includes the target URL",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Mentions file extension .md",
+          "type": "contains_concept"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "to-md 抓取网页时遇到一个问题，某个网站的内容总是提取不完整，只有前几段文字。这个网站是 https://example-blog.com/post/123，我怎么调试？",
+      "expected_output": "提供系统化的调试步骤：先尝试 no-rule 模式，再尝试自定义选择器，最后考虑添加等待时间",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Suggests trying without rules first",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Mentions custom selector option",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Suggests adding wait time",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Provides systematic debugging steps",
+          "type": "contains_concept"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我想给 to-md 添加对新网站的支持，这个网站是 https://tech-blog.dev，文章内容在 div.article-body 里，标题在 h1.post-title。怎么添加规则？",
+      "expected_output": "提供完整的规则添加步骤，包括分析页面、编写 JSON 规则、测试验证",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Explains website_list.json location",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Shows correct JSON rule format",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Uses correct URL pattern format",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Includes testing step",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Mentions exclude field",
+          "type": "contains_concept"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "我需要抓取一个需要登录才能看到的文章，to-md 支持吗？",
+      "expected_output": "解释 --profile 参数的用法，说明如何复用 Chrome 登录态",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Confirms login support exists",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Explains --profile parameter",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Provides Windows path example",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Mentions non-headless mode",
+          "type": "contains_concept"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "to-md 的 SimpRead 选择器语法 [[{...}]] 和 [[['text']]] 分别是什么意思？",
+      "expected_output": "清晰解释各种选择器语法的含义和用法",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Correctly explains [[{...}]] as jQuery expression",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Correctly explains [[['text']]] as text removal",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Provides usage examples",
+          "type": "contains_concept"
+        },
+        {
+          "text": "Mentions other selector types",
+          "type": "contains_concept"
+        }
+      ]
+    }
+  ]
+}
