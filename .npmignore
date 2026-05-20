@@ -1,0 +1,23 @@
+# tests
+test_batch.mjs
+test_results
+test
+
+# debug / profile
+.pw-profile
+debug
+
+# editor / IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# misc
+.git
+.gitignore
+.github
+CLAUDE.md
+simpread_test_report.md

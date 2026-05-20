@@ -1,0 +1,51 @@
+{
+  "name": "to-md",
+  "version": "1.0.0",
+  "description": "CLI tool to extract web content using SimpRead rules and convert to Markdown",
+  "type": "module",
+  "main": "lib/converter.mjs",
+  "bin": {
+    "to-md": "./bin/cli.mjs"
+  },
+  "homepage": "https://github.com/sweetwisdom/to-md",
+  "author": "sweetwisdom",
+  "maintainers": [
+    {
+      "name": "sweetwisdom",
+      "email": "sweetwisdom@foxmail.com",
+      "web": "https://github.com/sweetwisdom"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sweetwisdom/to-md"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "data/",
+    "README.md",
+    "README_EN.md"
+  ],
+  "scripts": {
+    "start": "node bin/cli.mjs"
+  },
+  "keywords": [
+    "markdown",
+    "web-scraper",
+    "readability",
+    "simpread",
+    "cli"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "commander": "^13.1.0",
+    "playwright": "^1.52.0",
+    "turndown": "^7.2.0",
+    "turndown-plugin-gfm": "^1.0.2"
+  }
+}
