@@ -36,14 +36,14 @@ Ever run into these issues?
 No installation needed:
 
 ```bash
-npx to-md https://juejin.cn/post/7605416964510810139
-npx to-md https://juejin.cn/post/7605416964510810139 -o article.md
+npx playwright-to-md https://juejin.cn/post/7605416964510810139
+npx playwright-to-md https://juejin.cn/post/7605416964510810139 -o article.md
 ```
 
 ### Option 2: Global install (recommended for frequent use)
 
 ```bash
-npm install -g to-md
+npm install -g playwright-to-md
 
 # Use directly after install
 to-md https://juejin.cn/post/7605416964510810139

@@ -36,14 +36,14 @@
 无需安装，直接执行：
 
 ```bash
-npx to-md https://juejin.cn/post/7605416964510810139
-npx to-md https://juejin.cn/post/7605416964510810139 -o article.md
+npx playwright-to-md https://juejin.cn/post/7605416964510810139
+npx playwright-to-md https://juejin.cn/post/7605416964510810139 -o article.md
 ```
 
 ### 方式二：全局安装（推荐常用）
 
 ```bash
-npm install -g to-md
+npm install -g playwright-to-md
 
 # 安装后即可直接使用
 to-md https://juejin.cn/post/7605416964510810139

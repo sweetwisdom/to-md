@@ -1,5 +1,5 @@
 {
-  "name": "to-md",
+  "name": "playwright-to-md",
   "version": "1.0.0",
   "description": "CLI tool to extract web content using SimpRead rules and convert to Markdown",
   "type": "module",
