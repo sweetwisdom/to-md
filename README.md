@@ -1,11 +1,11 @@
-# to-md
+# playwright-to-md
 
 > 告别复制粘贴，一行命令把网页变成干净的 Markdown。
 
 |      |      |
 | ---- | ---- |
-| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" />![image-20260520183033442](./.imgs/image-20260520183033442.png) | 
-<img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" />     |
+| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" /> |<img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" /> |
+    |
 
 
 
@@ -26,7 +26,7 @@
 
 `to-md` 就是为了解决这些问题而生的。
 
-## 为什么选择 to-md
+## 为什么选择 playwright-to-md
 
 | 特性 | 说明 |
 |------|------|
