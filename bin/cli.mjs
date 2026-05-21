@@ -6,7 +6,7 @@ import { writeFileSync } from 'node:fs';
 import { loadRules, matchRule } from '../lib/rules.mjs';
 import { extractContent, extractWithSelectors } from '../lib/extractor.mjs';
 import { extractWithReadability, extractWithGenericSelector, needsFallback } from '../lib/readability.mjs';
-import { isSpecialSelector } from '../lib/selector.mjs';
+import { isSpecialSelector, classifySelector } from '../lib/selector.mjs';
 import { toMarkdown, toDocument } from '../lib/converter.mjs';
 
 /**
@@ -16,6 +16,10 @@ import { toMarkdown, toDocument } from '../lib/converter.mjs';
 async function waitForContent(page, selector, options = {}) {
   const { timeout = 5000, minLength = 100 } = options;
   const startTime = Date.now();
+
+  // Parse angle-bracket selectors to standard CSS
+  const classified = classifySelector(selector);
+  const cssSelector = classified.cssSelector || selector;
 
   while (Date.now() - startTime < timeout) {
     try {
@@ -27,7 +31,7 @@ async function waitForContent(page, selector, options = {}) {
           length: el.textContent.trim().length,
           html: el.innerHTML.substring(0, 200),
         };
-      }, selector);
+      }, cssSelector);
 
       if (result.found && result.length >= minLength) {
         return result;
@@ -109,9 +113,9 @@ program
         page = await browser.newPage();
       }
 
-      // Navigate - domcontentloaded is faster and sufficient for Readability
+      // Navigate - networkidle waits for AJAX/dynamic content to finish loading
       await page.goto(url, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle',
         timeout: parseInt(options.timeout, 10),
       });
 
@@ -136,6 +140,27 @@ program
           console.warn(`Warning: Content selector "${contentSelector}" not found or empty`);
         }
       }
+
+      // Scroll page to trigger lazy-loaded images, then fix data-src → src
+      await page.evaluate(async () => {
+        // Scroll to bottom in steps to trigger IntersectionObserver lazy loading
+        const step = window.innerHeight;
+        const max = document.body.scrollHeight;
+        for (let y = 0; y < max; y += step) {
+          window.scrollTo(0, y);
+          await new Promise(r => setTimeout(r, 100));
+        }
+        window.scrollTo(0, 0);
+        // Convert lazy-load attributes to src
+        document.querySelectorAll('img').forEach(img => {
+          const realSrc = img.getAttribute('data-src') ||
+                          img.getAttribute('data-original') ||
+                          img.getAttribute('data-actualsrc') || '';
+          if (realSrc && img.src.startsWith('data:')) {
+            img.setAttribute('src', realSrc);
+          }
+        });
+      });
 
       let result = { title: '', desc: '', content: '' };
       let method = 'rule';
