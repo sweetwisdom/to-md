@@ -30,12 +30,14 @@
 
 | 特性 | 说明 |
 |------|------|
-| 反检测机制 | 注入反自动化脚本，移除 `navigator.webdriver` 标志，模拟真实浏览器行为 |
-| 复用登录态 | `--profile` 参数指定已有 Chrome 配置目录，直接复用 cookies 和登录状态 |
-| 纯 Markdown 输出 | 基于 Turndown + GFM 插件，输出标准 Markdown，代码块、表格、图片链接完整保留 |
-| 精准提取 | 内置数百条 SimpRead 站点规则，自动过滤广告、导航、评论等无关内容 |
-| 三级降级 | 规则匹配 → Readability → 通用选择器，确保任意网页都能提取到正文 |
-| 懒加载图片 | 自动识别 `data-src`、`data-original` 等属性，图片链接不会丢失 |
+| JS 渲染 | Playwright 加载页面，SPA / 动态内容都能抓 |
+| 反检测 | 移除 `navigator.webdriver` 标志，模拟真实浏览器 |
+| 智能提取 | Defuddle 自动识别正文区域，去广告、导航、评论 |
+| 复用登录态 | `--profile` 指定 Chrome 配置目录，直接复用 cookies |
+| YAML frontmatter | 自动生成 title / author / date / source 元数据 |
+| 懒加载图片 | 自动滚动触发 + `data-src` 修复 |
+| 双浏览器 | 支持 Chrome 和 Edge |
+|
 
 ## 安装与使用
 
@@ -66,16 +68,17 @@ to-md https://juejin.cn/post/7605416964510810139 -o article.md
 to-md <url> [options]
 ```
 
+
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
 | `-o, --output <file>` | 输出到文件 | 终端输出 |
-| `-i, --include <selector>` | 自定义内容选择器 | 自动匹配 |
-| `-t, --title <selector>` | 自定义标题选择器 | 自动匹配 |
-| `--no-rule` | 跳过规则匹配，直接用 Readability | - |
-| `--headless` | 无头模式运行（不显示浏览器窗口） | 关闭 |
-| `--wait <ms>` | 额外等待时间（用于动态加载） | `0` |
+| `--browser <name>` | 浏览器：`chrome` 或 `msedge` | `chrome` |
+| `--headless` / `--no-headless` | 无头模式 / 显示浏览器窗口 | 无头 |
+| `--wait <ms>` | 额外等待时间（动态加载） | `0` |
 | `--timeout <ms>` | 页面加载超时 | `30000` |
-| `--profile <dir>` | Chrome 配置目录（保留登录态） | 无 |
+| `--profile <dir>` | Chrome/Edge 配置目录（保留登录态） | 无 |
+| `--no-frontmatter` | 不输出 YAML frontmatter | - |
+| `--json` | JSON 格式输出（含元数据） | - |
 
 ## 使用场景
 
@@ -86,7 +89,8 @@ to-md <url> [options]
 to-md https://juejin.cn/post/7605416964510810139 -o article.md
 
 # 知乎专栏
-to-md https://zhuanlan.zhihu.com/p/123456 -o article.md
+
+to-md --no-headless --browser msedge  https://zhuanlan.zhihu.com/p/7314838716
 
 # CSDN
 to-md https://blog.csdn.net/user/article/details/123456 -o article.md
