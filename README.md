@@ -1,12 +1,12 @@
 # playwright-to-md
 
 > 告别复制粘贴，一行命令把网页变成干净的 Markdown。
+>
+> 采用 [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) 同款提取引擎，CLI 版本。
 
-|      |      |
-| ---- | ---- |
-| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" /> |<img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" /> |
-    |
 
+
+ ![效果演示](./.imgs/recording-1779345809155-1.gif)
 
 
 
@@ -30,12 +30,29 @@
 
 | 特性 | 说明 |
 |------|------|
-| 反检测机制 | 注入反自动化脚本，移除 `navigator.webdriver` 标志，模拟真实浏览器行为 |
-| 复用登录态 | `--profile` 参数指定已有 Chrome 配置目录，直接复用 cookies 和登录状态 |
-| 纯 Markdown 输出 | 基于 Turndown + GFM 插件，输出标准 Markdown，代码块、表格、图片链接完整保留 |
-| 精准提取 | 内置数百条 SimpRead 站点规则，自动过滤广告、导航、评论等无关内容 |
-| 三级降级 | 规则匹配 → Readability → 通用选择器，确保任意网页都能提取到正文 |
-| 懒加载图片 | 自动识别 `data-src`、`data-original` 等属性，图片链接不会丢失 |
+| JS 渲染 | Playwright 加载页面，SPA / 动态内容都能抓 |
+| 反检测 | 移除 `navigator.webdriver` 标志，模拟真实浏览器 |
+| 智能提取 | Defuddle 自动识别正文区域，去广告、导航、评论 |
+| 复用登录态 | `--profile` 指定 Chrome 配置目录，直接复用 cookies |
+| YAML frontmatter | 自动生成 title / author / date / source 元数据 |
+| 懒加载图片 | 自动滚动触发 + `data-src` 修复 |
+| 双浏览器 | 支持 Chrome 和 Edge |
+
+## 支持站点
+
+采用与 Obsidian Web Clipper 相同的 Defuddle 引擎，智能识别正文区域，**理论上支持所有文章类网页**。
+
+| 类别 | 站点 |
+|------|------|
+| 技术社区 | 掘金、CSDN、博客园、SegmentFault、V2EX、思否 |
+| 知识平台 | 知乎专栏、简书、少数派、语雀 |
+| 代码托管 | GitHub、GitLab、Gitee |
+| 博客系统 | WordPress、Hexo、Hugo、Typecho、Ghost |
+| 新闻资讯 | 36氪、InfoQ、虎嗅、澎湃 |
+| 国外站点 | Medium、Dev.to、Hashnode、Stack Overflow |
+| 文档站点 | 各类技术文档、Wiki |
+
+> 未列出的站点同样支持，Defuddle 会自动识别文章区域。
 
 ## 安装与使用
 
@@ -66,16 +83,17 @@ to-md https://juejin.cn/post/7605416964510810139 -o article.md
 to-md <url> [options]
 ```
 
+
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
 | `-o, --output <file>` | 输出到文件 | 终端输出 |
-| `-i, --include <selector>` | 自定义内容选择器 | 自动匹配 |
-| `-t, --title <selector>` | 自定义标题选择器 | 自动匹配 |
-| `--no-rule` | 跳过规则匹配，直接用 Readability | - |
-| `--headless` | 无头模式运行（不显示浏览器窗口） | 关闭 |
-| `--wait <ms>` | 额外等待时间（用于动态加载） | `0` |
+| `--browser <name>` | 浏览器：`chrome` 或 `msedge` | `chrome` |
+| `--headless` / `--no-headless` | 无头模式 / 显示浏览器窗口 | 无头 |
+| `--wait <ms>` | 额外等待时间（动态加载） | `0` |
 | `--timeout <ms>` | 页面加载超时 | `30000` |
-| `--profile <dir>` | Chrome 配置目录（保留登录态） | 无 |
+| `--profile <dir>` | Chrome/Edge 配置目录（保留登录态） | 无 |
+| `--no-frontmatter` | 不输出 YAML frontmatter | - |
+| `--json` | JSON 格式输出（含元数据） | - |
 
 ## 使用场景
 
@@ -86,7 +104,8 @@ to-md <url> [options]
 to-md https://juejin.cn/post/7605416964510810139 -o article.md
 
 # 知乎专栏
-to-md https://zhuanlan.zhihu.com/p/123456 -o article.md
+
+to-md --no-headless --browser msedge  https://zhuanlan.zhihu.com/p/7314838716
 
 # CSDN
 to-md https://blog.csdn.net/user/article/details/123456 -o article.md
@@ -121,103 +140,62 @@ to-md https://example.com/spa-page -o article.md --wait 3000
 to-md https://example.com/slow-page -o article.md --timeout 60000
 ```
 
-### 自定义选择器
-
-当内置规则无法匹配时，可以用 `-i` 指定内容区域：
-
-```bash
-# CSS 选择器
-to-md https://example.com/article -i ".post-content"
-
-# 组合选择器
-to-md https://example.com/article -i "article .entry-content"
-
-# 同时指定标题和内容
-to-md https://example.com/article -t "h1.title" -i ".article-body"
-```
 
 ## 工作原理
 
-to-md 采用**三级提取策略**，逐级降级，确保任意网页都能提取到内容：
+to-md 采用简洁的两步流程：Playwright 加载页面 → Defuddle 提取正文。
 
 ```
-                         ┌─────────────────────────┐
-                         │   Playwright 加载页面     │
-                         └────────────┬────────────┘
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    ▼                 ▼                 ▼
-            ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-            │   Tier 1     │  │   Tier 2     │  │   Tier 3     │
-            │  规则匹配     │  │ Readability  │  │ 通用选择器    │
-            │              │  │              │  │              │
-            │ website_list │  │ 注入浏览器    │  │ article      │
-            │ .json 中的   │  │ 执行 Mozilla │  │ main         │
-            │ SimpRead 规则│  │ Readability  │  │ .content     │
-            └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-                   │                 │                 │
-                   │    内容 < 100 字符？               │
-                   ├────────────────►│                 │
-                   │                 │   内容 < 100 字符？
-                   │                 ├────────────────►│
-                   ▼                 ▼                 ▼
-            ┌─────────────────────────────────────────────┐
-            │              Turndown 转 Markdown            │
-            │         (GFM 支持、懒加载图片处理)            │
-            └─────────────────────────────────────────────┘
-                                      │
-                                      ▼
-                               ┌────────────┐
-                               │   输出结果   │
-                               └────────────┘
+    ┌─────────────────────────┐
+    │   Playwright 加载页面     │
+    │   (反检测 + 懒加载触发)   │
+    └────────────┬────────────┘
+                 │
+                 ▼
+    ┌─────────────────────────┐
+    │   Defuddle 提取正文       │
+    │   (自动识别内容区域)      │
+    │   (去广告/导航/评论)      │
+    │   (直接输出 Markdown)     │
+    └────────────┬────────────┘
+                 │
+                 ▼
+    ┌─────────────────────────┐
+    │   输出结果               │
+    │   (Markdown / JSON)      │
+    └─────────────────────────┘
 ```
 
-### Tier 1：规则匹配
+### 内容提取
 
-从 `data/website_list.json` 加载 SimpRead 的数百条站点规则，通过 URL 模式匹配找到对应规则，使用规则中定义的选择器精准提取标题和正文。
+使用 [Defuddle](https://github.com/kepano/defuddle) 进行智能内容提取：
 
-支持的选择器类型：
+- 自动识别文章正文区域，无需手动配置选择器
+- 去除广告、导航栏、侧边栏、评论区等噪音
+- 直接输出 Markdown，无需额外转换步骤
+- 支持主流博客、新闻、技术文档站点
 
-| 语法 | 说明 | 示例 |
-|------|------|------|
-| `<tag class='x'>` | CSS 选择器 | `<div class='article'>` |
-| `[[{ code }]]` | jQuery 表达式 | `[[{ $('article').text() }]]` |
-| `[[[ code ]]]` | jQuery 对象（返回 HTML） | `[[[$('.content')]]]` |
-| `[['text']]` | 文本移除 | `[['广告']]` |
-| `[[/regexp/]]` | 正则移除 | `[[/\d{4}-\d{2}/]]` |
-| `` [[`xpath`]] `` | XPath | `` [[`//article`]] `` |
-| `a \|\| b` | 管道回退 | `<article> \|\| <main>` |
+### 反爬虫处理
 
-### Tier 2：Readability 降级
+浏览器启动时注入反检测脚本，模拟真实浏览器环境：
 
-当规则匹配失败或提取内容过短时，将 [Mozilla Readability](https://github.com/mozilla/readability) 注入浏览器上下文执行，在 DOM 环境中进行通用的文章提取。
+- 移除 `navigator.webdriver` 标志
+- 伪装 `window.chrome` 对象和浏览器插件
+- 模拟真实的屏幕尺寸和 WebGL 渲染器
+- 隐藏 Playwright 痕迹
 
-### Tier 3：通用选择器兜底
+### 懒加载图片
 
-最后尝试一组常见的 CSS 选择器（`article`、`main`、`.content`、`.post-body` 等），提取页面中最可能包含正文的区域。
+页面加载后自动滚动触发懒加载，并修复 `data-src` 等属性确保图片正确显示。
 
-### Markdown 转换
+## 特殊说明
 
-使用 [Turndown](https://github.com/mixmark-io/turndown) 进行 HTML → Markdown 转换，启用 GFM 插件支持表格、删除线、任务列表等语法。额外处理：
+大多数站点直接支持，以下站点需要特殊参数：
 
-- 懒加载图片：自动识别 `data-src`、`data-original` 等属性
-- SimpRead 自定义标签：清理 `<sr-*>` 标签，保留内容
-- 空链接过滤：移除无文本内容的链接
-
-## 站点适配
-
-内置规则覆盖主流中文技术社区和博客平台：
-
-| 站点 | 提取方式 | 备注 |
-|------|---------|------|
-| 掘金 | 规则匹配 | - |
-| 知乎 | 规则匹配 | - |
-| 少数派 | 规则匹配 | - |
-| CSDN | 规则匹配 | - |
-| 简书 | 规则匹配 | - |
-| 通用博客 | Readability | 自动识别文章区域 |
-
-> 完整规则列表见 `data/website_list.json`，来源于 [SimpRead](https://github.com/Kenshin/simpread)。
+| 站点 | 说明 |
+|------|------|
+| 知乎 | 需 `--no-headless --browser msedge` 绕过反爬 |
+| 需登录的站点 | 使用 `--profile` 复用 Chrome 登录态 |
 
 ## 本地开发
 
@@ -243,21 +221,16 @@ to-md/
 ├── bin/
 │   └── cli.mjs            # CLI 入口，编排提取流程
 ├── lib/
-│   ├── rules.mjs           # 规则加载与 URL 匹配
-│   ├── selector.mjs        # SimpRead 选择器语法解析
-│   ├── extractor.mjs       # Playwright 页面内容提取
-│   ├── readability.mjs     # Readability 注入与通用选择器
-│   └── converter.mjs       # Turndown HTML → Markdown 转换
-├── data/
-│   └── website_list.json   # SimpRead 站点规则库
+│   ├── browser.mjs        # Playwright 浏览器管理、反检测、懒加载
+│   └── converter.mjs      # Defuddle 内容提取 + Markdown 格式化
 └── package.json
 ```
 
 ## 相关项目
 
-- [SimpRead](https://github.com/Kenshin/simpread) - 简悦，浏览器扩展，提供沉浸式阅读体验
-- [Readability](https://github.com/mozilla/readability) - Mozilla 的通用文章提取算法
-- [Turndown](https://github.com/mixmark-io/turndown) - HTML to Markdown 转换器
+- [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) - 浏览器扩展版，本项目的灵感来源
+- [Defuddle](https://github.com/kepano/defuddle) - 智能网页内容提取引擎
+- [Playwright](https://github.com/microsoft/playwright) - 浏览器自动化框架
 
 ## License
 

@@ -1,6 +1,6 @@
 {
   "name": "playwright-to-md",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "CLI tool to extract web content using SimpRead rules and convert to Markdown",
   "type": "module",
   "main": "lib/converter.mjs",
@@ -43,10 +43,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@mozilla/readability": "^0.6.0",
     "commander": "^13.1.0",
-    "playwright": "^1.52.0",
-    "turndown": "^7.2.0",
-    "turndown-plugin-gfm": "^1.0.2"
+    "defuddle": "^0.18.1",
+    "linkedom": "^0.18.0",
+    "playwright": "^1.52.0"
   }
 }

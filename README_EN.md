@@ -1,15 +1,14 @@
 # to-md
 
 > One command to turn any web page into clean Markdown. No copy-paste needed.
+>
+> Powered by the same extraction engine as [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper), available as a CLI tool.
 
 [中文](./README.md) | English
 
 ---
 
-|                                                              |      |
-| ------------------------------------------------------------ | ---- |
-| <img src="./.imgs/recording.gif" alt="recording" style="zoom:50%;" />![image-20260520183033442](./.imgs/image-20260520183033442.png) |      |
-| <img src="./.imgs/image-20260520183051105.png" alt="image-20260520183051105" style="zoom:50%;" /> |      |
+ ![效果演示](./.imgs/recording-1779345809155-1.gif)
 
 ## The Problem
 
@@ -27,12 +26,29 @@ Ever run into these issues?
 
 | Feature | Description |
 |---------|-------------|
-| Anti-detection | Injects stealth scripts, removes `navigator.webdriver` flags, mimics real browser behavior |
-| Reuse login sessions | `--profile` option points to existing Chrome profile directory, reusing cookies and login state |
-| Pure Markdown output | Powered by Turndown + GFM plugin — standard Markdown with code blocks, tables, and image links intact |
-| Precise extraction | Hundreds of built-in SimpRead site rules, automatically filtering ads, navigation, comments |
-| Three-tier fallback | Rule matching → Readability → generic selectors — ensures content from any page |
-| Lazy-loaded images | Auto-detects `data-src`, `data-original` attributes — no broken image links |
+| JS Rendering | Playwright loads pages, handles SPA and dynamic content |
+| Anti-detection | Injects stealth scripts, removes `navigator.webdriver` flags, mimics real browser |
+| Smart Extraction | Defuddle auto-detects content area, removes ads, navigation, comments |
+| Reuse Login Sessions | `--profile` option points to existing Chrome profile directory |
+| YAML Frontmatter | Auto-generates title / author / date / source metadata |
+| Lazy-loaded Images | Auto-scroll triggers + `data-src` attribute fixes |
+| Dual Browser | Supports Chrome and Edge |
+
+## Supported Sites
+
+Uses the same Defuddle engine as Obsidian Web Clipper with intelligent content detection — **theoretically supports all article-based web pages**.
+
+| Category | Sites |
+|----------|-------|
+| Tech Communities | Juejin, CSDN, CNBlogs, SegmentFault, V2EX |
+| Knowledge Platforms | Zhihu Columns, Jianshu, Sspai, Yuque |
+| Code Hosting | GitHub, GitLab, Gitee |
+| Blog Systems | WordPress, Hexo, Hugo, Typecho, Ghost |
+| News & Media | 36Kr, InfoQ, Huxiu, The Paper |
+| International | Medium, Dev.to, Hashnode, Stack Overflow |
+| Documentation | Various tech docs, Wiki |
+
+> Sites not listed are also supported. Defuddle automatically identifies article content.
 
 ## Installation & Usage
 
@@ -66,26 +82,26 @@ to-md <url> [options]
 | Option | Description | Default |
 |--------|-------------|---------|
 | `-o, --output <file>` | Output to file | stdout |
-| `-i, --include <selector>` | Custom content selector | auto-detect |
-| `-t, --title <selector>` | Custom title selector | auto-detect |
-| `--no-rule` | Skip rule matching, use Readability directly | - |
-| `--headless` | Run browser in headless mode (no visible window) | off |
+| `--browser <name>` | Browser: `chrome` or `msedge` | `chrome` |
+| `--headless` / `--no-headless` | Headless mode / show browser window | headless |
 | `--wait <ms>` | Extra wait time for dynamic content | `0` |
 | `--timeout <ms>` | Page load timeout | `30000` |
-| `--profile <dir>` | Chrome profile directory (keeps login sessions) | none |
+| `--profile <dir>` | Chrome/Edge profile directory (keeps login sessions) | none |
+| `--no-frontmatter` | Skip YAML frontmatter | - |
+| `--json` | Output as JSON with metadata | - |
 
 ## Usage Examples
 
 ### Extract Technical Articles
 
 ```bash
-# Juejin (Chinese dev community)
+# Juejin
 to-md https://juejin.cn/post/7605416964510810139 -o article.md
 
 # Zhihu columns
-to-md https://zhuanlan.zhihu.com/p/123456 -o article.md
+to-md --no-headless --browser msedge https://zhuanlan.zhihu.com/p/7314838716
 
-# CSDN blog posts
+# CSDN
 to-md https://blog.csdn.net/user/article/details/123456 -o article.md
 ```
 
@@ -118,105 +134,62 @@ to-md https://example.com/spa-page -o article.md --wait 3000
 to-md https://example.com/slow-page -o article.md --timeout 60000
 ```
 
-### Custom Selectors
-
-When built-in rules don't match, use `-i` to specify the content area:
-
-```bash
-# CSS selector
-to-md https://example.com/article -i ".post-content"
-
-# Compound selector
-to-md https://example.com/article -i "article .entry-content"
-
-# Specify both title and content selectors
-to-md https://example.com/article -t "h1.title" -i ".article-body"
-```
-
 ## How It Works
 
-to-md uses a **three-tier extraction strategy** with automatic fallback to ensure content extraction from any web page:
+to-md uses a simple two-step process: Playwright loads the page → Defuddle extracts the content.
 
 ```
-                         ┌─────────────────────────┐
-                         │   Playwright loads page   │
-                         └────────────┬────────────┘
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    ▼                 ▼                 ▼
-            ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-            │   Tier 1     │  │   Tier 2     │  │   Tier 3     │
-            │ Rule Match   │  │ Readability  │  │  Generic     │
-            │              │  │              │  │  Selectors   │
-            │ SimpRead     │  │ Injected     │  │              │
-            │ rules from   │  │ into browser │  │ article      │
-            │ website_list │  │ context      │  │ main         │
-            │ .json        │  │              │  │ .content     │
-            └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-                   │                 │                 │
-                   │    content < 100 chars?           │
-                   ├────────────────►│                 │
-                   │                 │  content < 100  │
-                   │                 │  chars?         │
-                   │                 ├────────────────►│
-                   ▼                 ▼                 ▼
-            ┌─────────────────────────────────────────────┐
-            │          Turndown → Markdown                │
-            │     (GFM, lazy images, tag cleanup)         │
-            └─────────────────────────────────────────────┘
-                                      │
-                                      ▼
-                               ┌────────────┐
-                               │   Output    │
-                               └────────────┘
+    ┌─────────────────────────┐
+    │   Playwright loads page  │
+    │   (anti-detection +      │
+    │    lazy load trigger)    │
+    └────────────┬────────────┘
+                 │
+                 ▼
+    ┌─────────────────────────┐
+    │   Defuddle extraction    │
+    │   (auto-detect content)  │
+    │   (remove ads/nav/comments) │
+    │   (direct Markdown output) │
+    └────────────┬────────────┘
+                 │
+                 ▼
+    ┌─────────────────────────┐
+    │   Output                 │
+    │   (Markdown / JSON)      │
+    └─────────────────────────┘
 ```
 
-### Tier 1: Rule Matching
+### Content Extraction
 
-Loads hundreds of site rules from `data/website_list.json` (sourced from [SimpRead](https://github.com/Kenshin/simpread)). Matches the URL against known patterns and uses the rule's selectors to precisely extract the title and body content.
+Uses [Defuddle](https://github.com/kepano/defuddle) for intelligent content extraction:
 
-Supported selector types:
+- Auto-detects article content area, no manual selector configuration needed
+- Removes ads, navigation bars, sidebars, and comment sections
+- Directly outputs Markdown, no additional conversion step needed
+- Supports mainstream blogs, news, and documentation sites
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `<tag class='x'>` | CSS selector | `<div class='article'>` |
-| `[[{ code }]]` | jQuery expression | `[[{ $('article').text() }]]` |
-| `[[[ code ]]]` | jQuery object (returns HTML) | `[[[$('.content')]]]` |
-| `[['text']]` | Text removal | `[['Advertisement']]` |
-| `[[/regexp/]]` | Regex removal | `[[/\d{4}-\d{2}/]]` |
-| `` [[`xpath`]] `` | XPath selector | `` [[`//article`]] `` |
-| `a \|\| b` | Pipe fallback | `<article> \|\| <main>` |
+### Anti-Scraping Handling
 
-### Tier 2: Readability Fallback
+Injects anti-detection scripts when launching the browser to mimic real browser environment:
 
-When rule matching fails or extracted content is too short, [Mozilla Readability](https://github.com/mozilla/readability) is injected into the browser context for universal article extraction in the DOM environment.
+- Removes `navigator.webdriver` flag
+- Disguises `window.chrome` object and browser plugins
+- Simulates real screen dimensions and WebGL renderer
+- Hides Playwright traces
 
-### Tier 3: Generic Selectors
+### Lazy-loaded Images
 
-As a last resort, tries common CSS selectors (`article`, `main`, `.content`, `.post-body`, etc.) to extract the most likely content area from the page.
+Automatically scrolls to trigger lazy-loaded images after page load, and fixes `data-src` attributes to ensure images display correctly.
 
-### Markdown Conversion
+## Special Notes
 
-Uses [Turndown](https://github.com/mixmark-io/turndown) for HTML → Markdown conversion with GFM plugin support (tables, strikethrough, task lists). Additional processing:
+Most sites are supported directly. The following sites require special parameters:
 
-- **Lazy-loaded images**: Automatically detects `data-src`, `data-original` attributes
-- **SimpRead custom tags**: Strips `<sr-*>` tags while preserving content
-- **Empty link filtering**: Removes links with no text content
-
-## Site Compatibility
-
-Built-in rules cover major Chinese tech platforms and common blog engines:
-
-| Site | Method | Notes |
-|------|--------|-------|
-| Juejin | Rule match | - |
-| Zhihu | Rule match | - |
-| Sspai | Rule match | - |
-| CSDN | Rule match | - |
-| Jianshu | Rule match | - |
-| Generic blogs | Readability | Auto-detects article areas |
-
-> See `data/website_list.json` for the full rule list, sourced from [SimpRead](https://github.com/Kenshin/simpread).
+| Site | Notes |
+|------|-------|
+| Zhihu | Requires `--no-headless --browser msedge` to bypass anti-scraping |
+| Login-required sites | Use `--profile` to reuse Chrome login sessions |
 
 ## Local Development
 
@@ -242,21 +215,16 @@ to-md/
 ├── bin/
 │   └── cli.mjs            # CLI entry point, orchestrates extraction
 ├── lib/
-│   ├── rules.mjs           # Rule loading and URL matching
-│   ├── selector.mjs        # SimpRead selector syntax parser
-│   ├── extractor.mjs       # Playwright page content extraction
-│   ├── readability.mjs     # Readability injection & generic selectors
-│   └── converter.mjs       # Turndown HTML → Markdown conversion
-├── data/
-│   └── website_list.json   # SimpRead site rule library
+│   ├── browser.mjs        # Playwright browser management, anti-detection, lazy loading
+│   └── converter.mjs      # Defuddle content extraction + Markdown formatting
 └── package.json
 ```
 
 ## Related Projects
 
-- [SimpRead](https://github.com/Kenshin/simpread) - Browser extension for immersive reading
-- [Readability](https://github.com/mozilla/readability) - Mozilla's universal article extraction algorithm
-- [Turndown](https://github.com/mixmark-io/turndown) - HTML to Markdown converter
+- [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper) - Browser extension version, inspiration for this project
+- [Defuddle](https://github.com/kepano/defuddle) - Smart web content extraction engine
+- [Playwright](https://github.com/microsoft/playwright) - Browser automation framework
 
 ## License
 
