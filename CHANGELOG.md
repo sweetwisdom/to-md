@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.8] - 2026-05-21
+
+### Fixed
+- **CSP 脚本加载失败**：移除 DOMPurify CDN 注入，解决微信公众号等严格 CSP 网站导致的 `Content Security Policy` 错误
+
+### Changed
+- **简化内容处理**：直接获取 `document.body.innerHTML`，不再依赖外部脚本进行 HTML 清理
+
 ## [1.0.5] - 2026-05-21
 
 ### Fixed
